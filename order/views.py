@@ -42,43 +42,23 @@ def create_order(request):
             customer = request.user  # Assuming the user is authenticated
             payment_method = request.POST.get('payment_method')
             menu_item_ids = request.POST.getlist('menu_items')  # List of item IDs
-
-            # Validate the payment method
             if payment_method not in dict(Orders.PAYMENT_CHOICES):
                 return JsonResponse({'error': 'Invalid payment method'}, status=400)
-
-            # Fetch the menu items
             menu_items = MenuItem.objects.filter(id__in=menu_item_ids)
             if not menu_items.exists():
                 return JsonResponse({'error': 'Invalid menu items'}, status=400)
-
-            # Create the order
             order = Orders.objects.create(
                 customer=customer,
                 payment_method=payment_method,
             )
-            order.items.set(menu_items)  # Assuming a Many-to-Many field for items
+            order.items.set(menu_items)
             order.save()
-
-            return JsonResponse({'message': 'Order created successfully'}, status=201)
+            orders = Orders.objects.all()
+            return render(request, 'dashboard/orders.html', {'orders': orders})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-def orders_dashboard_data(request):
-    # Fetch all orders (modify the query as needed)
+def orders_dashboard(request):
     orders = Orders.objects.all()
-
-    # Serialize orders into a JSON-friendly format
-    orders_data = [
-        {
-            'id': order.id,
-            'customer': str(order.customer),  # Assuming the customer field is a ForeignKey
-            'payment_method': order.get_payment_method_display(),
-            'date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-        }
-        for order in orders
-    ]
-
-    return JsonResponse({'orders': orders_data}, safe=False)
+    return render(request, 'dashboard/orders.html', {'orders': orders})

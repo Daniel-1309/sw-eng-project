@@ -12,3 +12,5 @@ urlpatterns = [
     path('create_order/', views.create_order, name='create_order'),
     path('api/orders/', views.orders_dashboard_data, name='orders_dashboard_data'),
 ]
+
+
